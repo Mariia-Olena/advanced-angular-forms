@@ -8,10 +8,14 @@
   padding: 5px 15px;
   box-sizing: border-box;
   align-items: center;
+  justify-content: space-between;
 }
 .logo {
   margin-right: 25px;
   width: 140px;
+}
+.nav {
+  display: flex;
 }
 .nav-link {
   display: block;
@@ -24,4 +28,7 @@
   &.active {
     border: 1px solid white;
   }
+}
+.global-search {
+  max-width: 350px;
 }

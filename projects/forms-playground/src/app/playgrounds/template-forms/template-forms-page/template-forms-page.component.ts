@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
+import { IUserInfo } from '../../../core/user-info.interface';
 
 @Component({
   selector: 'app-template-forms-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './template-forms-page.component.html',
   styleUrls: [
     '../../common-page.scss',
@@ -14,6 +16,18 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TemplateFormsPageComponent implements OnInit {
+
+  userInfo: IUserInfo = {
+    firsName: '',
+    lastName: '',
+    nickname: '',
+    email: '',
+    yearOfBirth: 0,
+    passport: '',
+    fullAddress: '',
+    city: '',
+    postCode: ''
+  }
 
   constructor() { }
 
@@ -25,4 +39,20 @@ export class TemplateFormsPageComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  onSubmitForm(form: NgForm, event: Event) {
+    console.log('The form has been submitted', form.value);
+    console.log('The form submit event', event);
+    
+    this.userInfo = {
+      firsName: '',
+      lastName: '',
+      nickname: '',
+      email: '',
+      yearOfBirth: 0,
+      passport: '',
+      fullAddress: '',
+      city: '',
+      postCode: ''
+    }
+  }
 }
