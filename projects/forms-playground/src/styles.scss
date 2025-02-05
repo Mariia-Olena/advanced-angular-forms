@@ -101,3 +101,24 @@ button[disabled] {
   border-color: rgba(0, 0, 0, 0.1);
   pointer-events: none;
 }
+
+@keyframes error-message-animation {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.input-error {
+  color: var(--color-error);
+  font-size: 12px;
+  box-sizing: border-box;
+  padding: 2px 13px;
+
+  animation-name: error-message-animation;
+  animation-duration: 300ms;
+}
