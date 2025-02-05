@@ -7,6 +7,8 @@
     <label for="name">First Name</label>
     <input
       [(ngModel)]="userInfo.firsName"
+      required
+      minlength="3"
       name="first-name"
       type="text"
       id="name"
@@ -17,6 +19,8 @@
     <label for="last-name">Last Name</label>
     <input
       [(ngModel)]="userInfo.lastName"
+      required
+      minlength="3"
       name="last-name"
       type="text"
       id="last-name"
@@ -27,6 +31,9 @@
     <label for="nick-name">Nick Name</label>
     <input
       [(ngModel)]="userInfo.nickname"
+      required
+      minlength="3"
+      pattern="^[\w.]+$"
       name="nick-name"
       type="text"
       id="nick-name"
@@ -37,6 +44,8 @@
     <label for="email">Email</label>
     <input
       [(ngModel)]="userInfo.email"
+      required
+      email
       name="email"
       type="email"
       id="email"
@@ -48,6 +57,7 @@
       <label for="year-of-birth">Year of birth</label>
       <select
         [(ngModel)]="userInfo.yearOfBirth"
+        required
         name="year-of-birth"
         id="year-of-birth"
       >
@@ -58,6 +68,7 @@
       <label for="passport">Passport Number</label>
       <input
         [(ngModel)]="userInfo.passport"
+        pattern="^[A-Z]{2}[0-9]{6}$"
         name="passport"
         type="text"
         id="passport"
@@ -65,12 +76,13 @@
       />
     </div>
   </div>
-  <fieldset>
+  <fieldset ngModelGroup="address">
     <legend>Address</legend>
     <div class="form-field">
       <label for="full-address">Full Adress</label>
       <input
         [(ngModel)]="userInfo.fullAddress"
+        required
         name="full-address"
         type="text"
         id="full-address"
@@ -81,6 +93,7 @@
       <label for="city">City</label>
       <input
         [(ngModel)]="userInfo.city"
+        required
         name="city"
         type="text"
         id="city"
@@ -91,6 +104,7 @@
       <label for="post-code">Post Code</label>
       <input
         [(ngModel)]="userInfo.postCode"
+        required
         name="post-code"
         type="number"
         id="post-code"
@@ -98,5 +112,5 @@
       />
     </div>
   </fieldset>
-  <button>Save</button>
+  <button [disabled]="form.invalid">Save</button>
 </form>
