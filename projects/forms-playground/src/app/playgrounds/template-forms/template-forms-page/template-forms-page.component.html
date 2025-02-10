@@ -8,6 +8,7 @@
     <input
       [(ngModel)]="userInfo.firsName"
       required
+      [appBanWords]="['test', 'first name']"
       minlength="3"
       #firstName="ngModel"
       name="first-name"
@@ -18,6 +19,9 @@
     <div *ngIf="firstName.dirty && firstName.hasError('required')" class="input-error">This field is required</div>
     <div *ngIf="firstName.dirty && firstName.hasError('minlength')" class="input-error">
       The length should be at least {{ firstName.getError('minlength').requiredLength }} characters
+    </div>
+    <div *ngIf="firstName.dirty && firstName.hasError('appBanWords')" class="input-error">
+      The value <strong>{{ firstName.getError('appBanWords').bannedWord }}</strong> is not allowed
     </div>
   </div>
   <div class="form-field">
@@ -33,15 +37,17 @@
       placeholder="Enter your last name"
     />
     <div *ngIf="lastName.dirty && lastName.hasError('required')" class="input-error">This field is required</div>
-    <div *ngIf="firstName.dirty && firstName.hasError('minlength')" class="input-error">
-      The length should be at least {{ firstName.getError('minlength').requiredLength }} characters
+    <div *ngIf="lastName.dirty && lastName.hasError('minlength')" class="input-error">
+      The length should be at least {{ lastName.getError('minlength').requiredLength }} characters
     </div>
   </div>
   <div class="form-field">
     <label for="nick-name">Nick Name</label>
     <input
       [(ngModel)]="userInfo.nickname"
+      [ngModelOptions]="{ updateOn: 'blur' }"
       required
+      appUniqueNickname
       minlength="3"
       pattern="^[\w.]+$"
       #nickname="ngModel"
@@ -51,10 +57,12 @@
       placeholder="Come up with a nick name"
     />
     <div *ngIf="nickname.dirty && nickname.hasError('required')" class="input-error">This field is required</div>
-    <div *ngIf="firstName.dirty && firstName.hasError('minlength')" class="input-error">
-      The length should be at least {{ firstName.getError('minlength').requiredLength }} characters
+    <div *ngIf="nickname.dirty && nickname.hasError('minlength')" class="input-error">
+      The length should be at least {{ nickname.getError('minlength').requiredLength }} characters
     </div>
-    <div *ngIf="nickname.dirty && nickname.hasError('pattern')" class="input-error">Only letters, numbers, _ and . are allowed </div>
+    <div *ngIf="nickname.dirty && nickname.hasError('pattern')" class="input-error">Only letters, numbers, _ and . are allowed</div>
+    <div *ngIf="nickname.dirty && nickname.hasError('appUniqueNickname')" class="input-error">This nickname is taken</div>
+    <div *ngIf="nickname.pending" class="input-info">Checking...</div>
   </div>
   <div class="form-field">
     <label for="email">Email</label>
@@ -90,13 +98,14 @@
       <input
         [(ngModel)]="userInfo.passport"
         pattern="^[A-Z]{2}[0-9]{6}$"
+        [required]="isAdult"
         #passport="ngModel"
         name="passport"
         type="text"
         id="passport"
         placeholder="Provide Passport Data"
       />
-      <div *ngIf="passport.dirty && passport.hasError('required')" class="input-error">This field is required</div>
+      <div *ngIf="passport.dirty && passport.hasError('required')" class="input-error">This field is required for adults</div>
       <div *ngIf="passport.dirty && passport.hasError('pattern')" class="input-error">This field must meet a pattern AA111111</div>
     </div>
   </div>
@@ -142,5 +151,35 @@
       <div *ngIf="postCode.dirty && postCode.hasError('required')" class="input-error">This field is required</div>
     </div>
   </fieldset>
-  <button [disabled]="form.invalid">Save</button>
+  <fieldset ngModelGroup="password" appPasswordShouldMatch>
+    <legend>User Password</legend>
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input
+        [(ngModel)]="userInfo.password"
+        required
+        minlength="6"
+        #password="ngModel"
+        name="password"
+        type="password"
+        id="password"
+        placeholder="Enter user's password">
+      <div *ngIf="password.dirty && password.hasError('required')" class="input-error">This field is required</div>
+      <div *ngIf="password.dirty && password.hasError('minlength')" class="input-error">
+        Password length should be at least <strong>{{password.getError('minlength').requiredLength}}</strong> characters
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="confirm-password">Confirm password</label>
+      <input
+        [(ngModel)]="userInfo.confirmPassword"
+        #confirmPassword="ngModel"
+        name="confirm-password"
+        type="password"
+        id="confirm-password"
+        placeholder="Confirm the password">
+        <div *ngIf="confirmPassword.dirty && confirmPassword.hasError('appPasswordShouldMatch')" class="input-error">Password doesn't match</div>
+    </div>
+  </fieldset>
+  <button [disabled]="form.invalid || form.pending">Save</button>
 </form>

@@ -6,6 +6,7 @@
   --color-accent-secondary-darker: #faa415;
   --color-success: #4caf50;
   --color-error: #ff5722;
+  --color-info: #449eff;
   --color-background: #eceff1;
   --color-text: #263238;
   --color-text-light: #607d8b;
@@ -92,7 +93,7 @@ select {
   border: 1px solid var(--color-success);
 }
 
-.ng-invalid.ng-dirty:not([ngModelGroup]):not(form) {
+.ng-invalid.ng-dirty:not([ngModelGroup="address"]):not(form) {
   border: 1px solid var(--color-error);
 }
 
@@ -102,7 +103,7 @@ button[disabled] {
   pointer-events: none;
 }
 
-@keyframes error-message-animation {
+@keyframes input-message-animation {
   from {
     opacity: 0;
     transform: translateY(-6px);
@@ -119,6 +120,16 @@ button[disabled] {
   box-sizing: border-box;
   padding: 2px 13px;
 
-  animation-name: error-message-animation;
+  animation-name: input-message-animation;
+  animation-duration: 300ms;
+}
+
+.input-info {
+  color: var(--color-info);
+  font-size: 12px;
+  box-sizing: border-box;
+  padding: 2px 13px;
+
+  animation-name: input-message-animation;
   animation-duration: 300ms;
 }

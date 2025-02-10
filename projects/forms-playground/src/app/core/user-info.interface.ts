@@ -8,4 +8,6 @@ export interface IUserInfo {
   fullAddress: string;
   city: string;
   postCode: string;
+  password: string;
+  confirmPassword: string;
 }
