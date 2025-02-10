@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { IUserInfo } from '../../../core/user-info.interface';
@@ -24,14 +24,17 @@ import { UniqueNicknameDirective } from '../validators/unique-nickname.directive
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TemplateFormsPageComponent implements OnInit {
+export class TemplateFormsPageComponent implements OnInit, AfterViewInit {
+  @ViewChild(NgForm) formDir!: NgForm;
+
+  private initialFormValues: unknown;
   userInfo: IUserInfo = {
-    firsName: '',
-    lastName: '',
-    nickname: '',
-    email: '',
-    yearOfBirth: 2022,
-    passport: '',
+    firsName: 'Mariia-Olena',
+    lastName: 'Stus',
+    nickname: 'Mariia-Olena',
+    email: 'mariia.stus@gmail.com',
+    yearOfBirth: 1995,
+    passport: 'AA111111',
     fullAddress: '',
     city: '',
     postCode: '',
@@ -55,22 +58,19 @@ export class TemplateFormsPageComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onSubmitForm(form: NgForm, event: Event) {
-    console.log('The form has been submitted', form.value);
-    console.log('The form submit event', event);
+  ngAfterViewInit(): void {
+    queueMicrotask(() => {
+      this.initialFormValues = this.formDir.value;
+    })
+  }
 
-    this.userInfo = {
-      firsName: '',
-      lastName: '',
-      nickname: '',
-      email: '',
-      yearOfBirth: 0,
-      passport: '',
-      fullAddress: '',
-      city: '',
-      postCode: '',
-      password: '',
-      confirmPassword: '',
-    };
+  onSubmitForm(event: Event) {
+    this.formDir.resetForm(this.formDir.value);
+    this.initialFormValues = this.formDir.value;
+  }
+
+  onReset(e: Event) {
+    e.preventDefault();
+    this.formDir.resetForm(this.initialFormValues);
   }
 }

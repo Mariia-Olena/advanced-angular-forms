@@ -62,6 +62,12 @@ button {
   color: var(--color-text);
   font-weight: bold;
   cursor: pointer;
+  
+  &.reset-button {
+    background-color: transparent;
+    border: var(--color-primary) 1px solid;
+  }
+
   &:hover {
     opacity: 0.8;
   }

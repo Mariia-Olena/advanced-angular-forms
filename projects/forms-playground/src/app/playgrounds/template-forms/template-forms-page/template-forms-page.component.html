@@ -1,6 +1,7 @@
 <form
   #form="ngForm"
-  (ngSubmit)="onSubmitForm(form, $event)"
+  (ngSubmit)="onSubmitForm($event)"
+  (reset)="onReset($event)"
   class="form"
 >
   <div class="form-field">
@@ -182,4 +183,5 @@
     </div>
   </fieldset>
   <button [disabled]="form.invalid || form.pending">Save</button>
+  <button type="reset" class="reset-button">Reset</button>
 </form>
