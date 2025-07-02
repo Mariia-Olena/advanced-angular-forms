@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-  FormArray,
+  FormBuilder,
   FormControl,
   FormGroup,
-  FormRecord,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 import { Observable, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
+import { banWords } from '../validators/ban-words.validator';
 
 @Component({
   selector: 'app-reactive-forms-page',
@@ -32,30 +33,38 @@ export class ReactiveFormsPageComponent implements OnInit {
       .map((_, idx) => now - idx);
   }
 
-  form = new FormGroup({
-    firstName: new FormControl('Mariia-Olena'),
-    lastName: new FormControl('Stus'),
-    nickname: new FormControl(''),
-    email: new FormControl('mariia.stus@gmail.com'),
-    yearOfBirth: new FormControl(this.years[this.years.length - 1], {
-      nonNullable: true,
+  form = this.fb.group({
+    firstName: ['Mariia-Olena', [Validators.required, Validators.minLength(2), banWords(['test', 'admin', 'user'])]],
+    lastName: ['Stus', [Validators.required, Validators.minLength(2)]],
+    nickname: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[\w.]+$/),
+      ],
+    ],
+    email: ['mariia.stus@gmail.com', [Validators.required, Validators.email]],
+    yearOfBirth: this.fb.nonNullable.control(
+      this.years[this.years.length - 1],
+      [Validators.required]
+    ),
+    passport: ['', [Validators.pattern(/^[A-Z]{2}[0-9]{6}$/)]],
+    address: this.fb.nonNullable.group({
+      fullAddress: ['', [Validators.required]],
+      city: ['', [Validators.required]],
+      postCode: [0, [Validators.required]],
     }),
-    passport: new FormControl(''),
-    address: new FormGroup({
-      fullAddress: new FormControl('', { nonNullable: true }),
-      city: new FormControl('', { nonNullable: true }),
-      postCode: new FormControl(0, { nonNullable: true }),
-    }),
-    phones: new FormArray([
-      new FormGroup({
-        label: new FormControl(this.phoneLabels[0], { nonNullable: true }),
-        phone: new FormControl(''),
+    phones: this.fb.array([
+      this.fb.group({
+        label: this.fb.nonNullable.control(this.phoneLabels[0]),
+        phone: '',
       }),
     ]),
-    skills: new FormRecord<FormControl<boolean>>({}),
+    skills: this.fb.record<boolean>({}),
   });
 
-  constructor(private userSkills: UserSkillsService) {}
+  constructor(private fb: FormBuilder, private userSkills: UserSkillsService) {}
 
   ngOnInit(): void {
     this.skills$ = this.userSkills

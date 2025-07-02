@@ -101,12 +101,12 @@ select {
   width: 100%;
 }
 
-.ng-valid.ng-dirty:not([ngModelGroup]):not(form) {
-  border: 1px solid var(--color-success);
+.ng-valid.ng-dirty:not([formGroupName]):not([formArrayName]):not([ngModelGroup]):not(form) {
+  border: 2px solid var(--color-success);
 }
 
-.ng-invalid.ng-dirty:not([ngModelGroup="address"]):not(form) {
-  border: 1px solid var(--color-error);
+.ng-invalid.ng-dirty:not([formGroupName]):not([formArrayName]):not([ngModelGroup="address"]):not(form) {
+  border: 2px solid var(--color-error);
 }
 
 button[disabled] {

@@ -2,39 +2,47 @@
   <pre>{{ form.value | json }}</pre>
   <div class="form-field">
     <label for="name">First Name</label>
-    <input
-      formControlName="firstName"
-      type="text"
-      id="name"
-      placeholder="Enter your name"
-    />
+    <input formControlName="firstName" type="text" id="name" placeholder="Enter your name" />
+    <ng-container *ngIf="form.controls.firstName as firstName">
+      <div *ngIf="firstName.dirty && firstName.hasError('required')" class="input-error">This field is required</div>
+      <div *ngIf="firstName.dirty && firstName.hasError('banWords')" class="input-error">
+        The value <strong>{{ firstName.getError("banWords").bannedWord }}</strong> is banned
+      </div>
+      <div *ngIf="firstName.dirty && firstName.hasError('minlength')" class="input-error">
+        The name must be at least <strong>{{ firstName.getError("minlength").requiredLength }}</strong>
+      </div>
+    </ng-container>
   </div>
   <div class="form-field">
     <label for="last-name">Last Name</label>
-    <input
-      formControlName="lastName"
-      type="text"
-      id="last-name"
-      placeholder="Enter your last name"
-    />
+    <input formControlName="lastName" type="text" id="last-name" placeholder="Enter your last name" />
+    <ng-container *ngIf="form.controls.lastName as lastName">
+      <div class="input-error" *ngIf="lastName.dirty && lastName.hasError('required')">This field is required</div>
+      <div class="input-error" *ngIf="lastName.dirty && lastName.hasError('minlength')">
+        The last name must be at least <strong>{{ lastName.getError("minlength").requiredLength }}</strong>
+      </div>
+    </ng-container>
   </div>
   <div class="form-field">
     <label for="nick-name">Nick Name</label>
-    <input
-      formControlName="nickname"
-      type="text"
-      id="nick-name"
-      placeholder="Come up with a nick name"
-    />
+    <input formControlName="nickname" type="text" id="nick-name" placeholder="Come up with a nick name" />
+    <ng-container *ngIf="form.controls.nickname as nickname">
+      <div class="input-error" *ngIf="nickname.dirty && nickname.hasError('required')">This field is required</div>
+      <div class="input-error" *ngIf="nickname.dirty && nickname.hasError('minlength')">
+        The nickname must be at least <strong>{{ nickname.getError("minlength").requiredLength }}</strong>
+      </div>
+      <div class="input-error" *ngIf="nickname.dirty && nickname.hasError('pattern')">
+        Only letters, numbers, _ and . is allowed
+      </div>
+    </ng-container>
   </div>
   <div class="form-field">
     <label for="email">Email</label>
-    <input
-      formControlName="email"
-      type="email"
-      id="email"
-      placeholder="Provide your email"
-    />
+    <input formControlName="email" type="email" id="email" placeholder="Provide your email" />
+    <ng-container *ngIf="form.controls.email as email">
+      <div class="input-error" *ngIf="email.dirty && email.hasError('required')">This field is required</div>
+      <div class="input-error" *ngIf="email.dirty && email.hasError('email')">The email is not valid</div>
+    </ng-container>
   </div>
   <div class="form-field-inline-group">
     <div class="form-field form-field--small">
@@ -45,37 +53,38 @@
     </div>
     <div class="form-field form-field--small">
       <label for="passport">Passport Number</label>
-      <input
-        formControlName="passport"
-        type="text"
-        id="passport"
-        placeholder="Provide Passport Data"
-      />
+      <input formControlName="passport" type="text" id="passport" placeholder="Provide Passport Data" />
+      <ng-container *ngIf="form.controls.passport as passport">
+        <div class="input-error" *ngIf="passport.dirty && passport.hasError('pattern')">
+          Allowed format is: AB123456
+        </div>
+      </ng-container>
     </div>
   </div>
   <fieldset formGroupName="address">
     <legend>Address</legend>
     <div class="form-field">
       <label for="full-address">Full Adress</label>
-      <input
-        formControlName="fullAddress"
-        type="text"
-        id="full-address"
-        placeholder="Street name and house number"
-      />
+      <input formControlName="fullAddress" type="text" id="full-address" placeholder="Street name and house number" />
+      <ng-container *ngIf="form.controls.address.controls.fullAddress as fullAddress">
+        <div class="input-error" *ngIf="fullAddress.dirty && fullAddress.hasError('required')">
+          This field is required
+        </div>
+      </ng-container>
     </div>
     <div class="form-field">
       <label for="city">City</label>
       <input formControlName="city" type="text" id="city" placeholder="City" />
+      <ng-container *ngIf="form.controls.address.controls.city as city">
+        <div class="input-error" *ngIf="city.dirty && city.hasError('required')">This field is required</div>
+      </ng-container>
     </div>
     <div class="form-field">
       <label for="post-code">Post Code</label>
-      <input
-        formControlName="postCode"
-        type="number"
-        id="post-code"
-        placeholder="Post code"
-      />
+      <input formControlName="postCode" type="number" id="post-code" placeholder="Post code" />
+      <ng-container *ngIf="form.controls.address.controls.postCode as postCode">
+        <div class="input-error" *ngIf="postCode.dirty && postCode.hasError('required')">This field is required</div>
+      </ng-container>
     </div>
   </fieldset>
   <fieldset formArrayName="phones">
@@ -83,11 +92,7 @@
     <div class="control-buttons">
       <button class="add-button" (click)="addPhone()" type="button">+</button>
     </div>
-    <div
-      class="form-field"
-      *ngFor="let phone of form.controls.phones.controls; index as i"
-      [formGroupName]="i"
-    >
+    <div class="form-field" *ngFor="let phone of form.controls.phones.controls; index as i" [formGroupName]="i">
       <label for="phone-{{ i }}">Phone number</label>
       <div class="control-container">
         <select class="phone-label-dropdown" formControlName="label">
@@ -95,15 +100,8 @@
             {{ label }}
           </option>
         </select>
-        <input
-          formControlName="phone"
-          type="number"
-          id="phone-{{ i }}"
-          placeholder="Enter Phone Number"
-        />
-        <button class="remove-button" (click)="removePhone(i)" type="button">
-          -
-        </button>
+        <input formControlName="phone" type="number" id="phone-{{ i }}" placeholder="Enter Phone Number" />
+        <button class="remove-button" (click)="removePhone(i)" type="button">-</button>
       </div>
     </div>
   </fieldset>
@@ -116,7 +114,7 @@
       </div>
     </ng-container>
   </fieldset>
-  <button>Save</button>
+  <button [disabled]="form.invalid">Save</button>
 </form>
 
 <ng-template #loading>
