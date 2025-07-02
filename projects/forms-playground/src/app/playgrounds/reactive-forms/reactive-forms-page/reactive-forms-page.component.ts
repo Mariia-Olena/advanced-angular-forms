@@ -4,9 +4,10 @@ import {
   FormArray,
   FormControl,
   FormGroup,
+  FormRecord,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
 
 @Component({
@@ -26,7 +27,9 @@ export class ReactiveFormsPageComponent implements OnInit {
   phoneLabels = ['Main', 'Mobile', 'Work', 'Home'];
   get years() {
     const now = new Date().getUTCFullYear();
-    return Array(now - (now - 40)).fill('').map((_, idx) => now - idx);
+    return Array(now - (now - 40))
+      .fill('')
+      .map((_, idx) => now - idx);
   }
 
   form = new FormGroup({
@@ -49,12 +52,15 @@ export class ReactiveFormsPageComponent implements OnInit {
         phone: new FormControl(''),
       }),
     ]),
+    skills: new FormRecord<FormControl<boolean>>({}),
   });
 
   constructor(private userSkills: UserSkillsService) {}
 
   ngOnInit(): void {
-    this.skills$ = this.userSkills.getSkills();
+    this.skills$ = this.userSkills
+      .getSkills()
+      .pipe(tap((skills) => this.buildSkillControls(skills)));
   }
 
   addPhone(): void {
@@ -69,6 +75,15 @@ export class ReactiveFormsPageComponent implements OnInit {
 
   removePhone(index: number): void {
     this.form.controls.phones.removeAt(index);
+  }
+
+  private buildSkillControls(skills: string[]) {
+    skills.forEach((skill) => {
+      this.form.controls.skills.addControl(
+        skill,
+        new FormControl(false, { nonNullable: true })
+      );
+    });
   }
 
   OnSubmit(event: Event): void {
