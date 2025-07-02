@@ -1,46 +1,124 @@
-<form class="form">
+<form [formGroup]="form" (ngSubmit)="OnSubmit($event)" class="form">
+  <pre>{{ form.value | json }}</pre>
   <div class="form-field">
     <label for="name">First Name</label>
-    <input type="text" id="name" placeholder="Enter your name">
+    <input
+      formControlName="firstName"
+      type="text"
+      id="name"
+      placeholder="Enter your name"
+    />
   </div>
   <div class="form-field">
     <label for="last-name">Last Name</label>
-    <input type="text" id="last-name" placeholder="Enter your last name">
+    <input
+      formControlName="lastName"
+      type="text"
+      id="last-name"
+      placeholder="Enter your last name"
+    />
   </div>
   <div class="form-field">
     <label for="nick-name">Nick Name</label>
-    <input type="text" id="nick-name" placeholder="Come up with a nick name">
+    <input
+      formControlName="nickname"
+      type="text"
+      id="nick-name"
+      placeholder="Come up with a nick name"
+    />
   </div>
   <div class="form-field">
     <label for="email">Email</label>
-    <input type="email" id="email" placeholder="Provide your email">
+    <input
+      formControlName="email"
+      type="email"
+      id="email"
+      placeholder="Provide your email"
+    />
   </div>
   <div class="form-field-inline-group">
     <div class="form-field form-field--small">
       <label for="year-of-birth">Year of birth</label>
-      <select id="year-of-birth">
-        <option *ngFor="let year of years" [value]="year">{{year}}</option>
+      <select formControlName="yearOfBirth" id="year-of-birth">
+        <option *ngFor="let year of years" [value]="year">{{ year }}</option>
       </select>
     </div>
     <div class="form-field form-field--small">
       <label for="passport">Passport Number</label>
-      <input type="text" id="passport" placeholder="Provide Passport Data">
+      <input
+        formControlName="passport"
+        type="text"
+        id="passport"
+        placeholder="Provide Passport Data"
+      />
     </div>
   </div>
-  <fieldset>
+  <fieldset formGroupName="address">
     <legend>Address</legend>
     <div class="form-field">
       <label for="full-address">Full Adress</label>
-      <input type="text" id="full-address" placeholder="Street name and house number">
+      <input
+        formControlName="fullAddress"
+        type="text"
+        id="full-address"
+        placeholder="Street name and house number"
+      />
     </div>
     <div class="form-field">
       <label for="city">City</label>
-      <input type="text" id="city" placeholder="City">
+      <input formControlName="city" type="text" id="city" placeholder="City" />
     </div>
     <div class="form-field">
       <label for="post-code">Post Code</label>
-      <input type="number" id="post-code" placeholder="Post code">
+      <input
+        formControlName="postCode"
+        type="number"
+        id="post-code"
+        placeholder="Post code"
+      />
     </div>
+  </fieldset>
+  <fieldset formArrayName="phones">
+    <legend>Phones</legend>
+    <div class="control-buttons">
+      <button class="add-button" (click)="addPhone()" type="button">+</button>
+    </div>
+    <div
+      class="form-field"
+      *ngFor="let phone of form.controls.phones.controls; index as i"
+      [formGroupName]="i"
+    >
+      <label for="phone-{{ i }}">Phone number</label>
+      <div class="control-container">
+        <select class="phone-label-dropdown" formControlName="label">
+          <option *ngFor="let label of phoneLabels" [value]="label">
+            {{ label }}
+          </option>
+        </select>
+        <input
+          formControlName="phone"
+          type="number"
+          id="phone-{{ i }}"
+          placeholder="Enter Phone Number"
+        />
+        <button class="remove-button" (click)="removePhone(i)" type="button">
+          -
+        </button>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>User Skill</legend>
+    <ng-container *ngIf="skills$ | async as skills; else loading">
+      <div *ngFor="let skill of skills" class="skill-container">
+        <input type="checkbox" [id]="skill" />
+        <label [for]="skill">{{ skill | titlecase }}</label>
+      </div>
+    </ng-container>
   </fieldset>
   <button>Save</button>
 </form>
+
+<ng-template #loading>
+  <p>Skills are loading...</p>
+</ng-template>

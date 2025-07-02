@@ -44,9 +44,15 @@ form {
   max-width: 450px;
 }
 
-label, input, fieldset, button {
+label, input:not([type="checkbox"]), fieldset, button {
   width: 100%;
   box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin-right: var(--spacing-step);
 }
 
 fieldset {
