@@ -1,4 +1,4 @@
-<form [formGroup]="form" (ngSubmit)="OnSubmit($event)" class="form">
+<form [formGroup]="form" (reset)="OnReset($event)" (ngSubmit)="OnSubmit($event)" class="form">
   <div class="form-field">
     <label for="name">First Name</label>
     <input formControlName="firstName" type="text" id="name" placeholder="Enter your name" />
@@ -146,6 +146,7 @@
     </div>
   </fieldset>
   <button [disabled]="form.invalid || form.pending">Save</button>
+  <button type="reset" [disabled]="form.pristine" class="reset-button">Reset</button>
 </form>
 
 <ng-template #loading>

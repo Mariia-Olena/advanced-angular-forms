@@ -1,7 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { buffer, bufferCount, filter, Observable, startWith, Subscription, tap } from 'rxjs';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  FormGroupDirective,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { bufferCount, filter, Observable, startWith, Subscription, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
 import { banWords } from '../validators/ban-words.validator';
 import { password } from '../validators/password.validator';
@@ -16,6 +23,13 @@ import { UniqueNicknameValidator } from '../validators/unique-nickname.validator
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
+  @ViewChild(FormGroupDirective) private formDir!: FormGroupDirective;
+
+  private ageValidators!: Subscription;
+  private formPendingState!: Subscription;
+
+  private initialFormValues: any;
+
   skills$!: Observable<string[]>;
   phoneLabels = ['Main', 'Mobile', 'Work', 'Home'];
   get years() {
@@ -60,9 +74,6 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
     ),
   });
 
-  private ageValidators!: Subscription;
-  private formPendingState!: Subscription;
-
   constructor(
     private fb: FormBuilder,
     private userSkills: UserSkillsService,
@@ -71,7 +82,10 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.skills$ = this.userSkills.getSkills().pipe(tap((skills) => this.buildSkillControls(skills)));
+    this.skills$ = this.userSkills.getSkills().pipe(
+      tap((skills) => this.buildSkillControls(skills)),
+      tap(() => (this.initialFormValues = this.form.value))
+    );
     this.ageValidators = this.form.controls.yearOfBirth.valueChanges
       .pipe(
         tap(() => this.form.controls.passport.markAsDirty()),
@@ -120,7 +134,13 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
 
   OnSubmit(event: Event): void {
     console.log(this.form.value);
-    this.form.reset();
+    this.initialFormValues = this.form.value;
+    this.formDir.resetForm(this.form.value);
+  }
+
+  OnReset(event: Event): void {
+    event.preventDefault();
+    this.formDir.resetForm(this.initialFormValues);
   }
 
   ngOnDestroy(): void {
