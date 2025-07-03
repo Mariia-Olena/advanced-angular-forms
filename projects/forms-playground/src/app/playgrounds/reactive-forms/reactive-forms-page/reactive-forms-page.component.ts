@@ -1,26 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
 import { banWords } from '../validators/ban-words.validator';
+import { password } from '../validators/password.validator';
 
 @Component({
   selector: 'app-reactive-forms-page',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './reactive-forms-page.component.html',
-  styleUrls: [
-    '../../common-page.scss',
-    '../../common-form.scss',
-    './reactive-forms-page.component.scss',
-  ],
+  styleUrls: ['../../common-page.scss', '../../common-form.scss', './reactive-forms-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReactiveFormsPageComponent implements OnInit {
@@ -36,19 +27,9 @@ export class ReactiveFormsPageComponent implements OnInit {
   form = this.fb.group({
     firstName: ['Mariia-Olena', [Validators.required, Validators.minLength(2), banWords(['test', 'admin', 'user'])]],
     lastName: ['Stus', [Validators.required, Validators.minLength(2)]],
-    nickname: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(2),
-        Validators.pattern(/^[\w.]+$/),
-      ],
-    ],
+    nickname: ['', [Validators.required, Validators.minLength(2), Validators.pattern(/^[\w.]+$/)]],
     email: ['mariia.stus@gmail.com', [Validators.required, Validators.email]],
-    yearOfBirth: this.fb.nonNullable.control(
-      this.years[this.years.length - 1],
-      [Validators.required]
-    ),
+    yearOfBirth: this.fb.nonNullable.control(this.years[this.years.length - 1], [Validators.required]),
     passport: ['', [Validators.pattern(/^[A-Z]{2}[0-9]{6}$/)]],
     address: this.fb.nonNullable.group({
       fullAddress: ['', [Validators.required]],
@@ -62,14 +43,16 @@ export class ReactiveFormsPageComponent implements OnInit {
       }),
     ]),
     skills: this.fb.record<boolean>({}),
+    password: this.fb.nonNullable.group({
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: '',
+    }, { validators: password })
   });
 
   constructor(private fb: FormBuilder, private userSkills: UserSkillsService) {}
 
   ngOnInit(): void {
-    this.skills$ = this.userSkills
-      .getSkills()
-      .pipe(tap((skills) => this.buildSkillControls(skills)));
+    this.skills$ = this.userSkills.getSkills().pipe(tap((skills) => this.buildSkillControls(skills)));
   }
 
   addPhone(): void {
@@ -88,10 +71,7 @@ export class ReactiveFormsPageComponent implements OnInit {
 
   private buildSkillControls(skills: string[]) {
     skills.forEach((skill) => {
-      this.form.controls.skills.addControl(
-        skill,
-        new FormControl(false, { nonNullable: true })
-      );
+      this.form.controls.skills.addControl(skill, new FormControl(false, { nonNullable: true }));
     });
   }
 

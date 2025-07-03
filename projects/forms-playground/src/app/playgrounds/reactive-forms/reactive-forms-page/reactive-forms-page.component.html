@@ -64,7 +64,7 @@
   <fieldset formGroupName="address">
     <legend>Address</legend>
     <div class="form-field">
-      <label for="full-address">Full Adress</label>
+      <label for="full-address">Full Address</label>
       <input formControlName="fullAddress" type="text" id="full-address" placeholder="Street name and house number" />
       <ng-container *ngIf="form.controls.address.controls.fullAddress as fullAddress">
         <div class="input-error" *ngIf="fullAddress.dirty && fullAddress.hasError('required')">
@@ -113,6 +113,33 @@
         <label [for]="skill">{{ skill | titlecase }}</label>
       </div>
     </ng-container>
+  </fieldset>
+  <fieldset formGroupName="password">
+    <legend>Password</legend>
+    <div class="form-field">
+      <label for="password">Create Password</label>
+      <input formControlName="password" type="password" id="password" placeholder="Enter password..." />
+      <ng-container *ngIf="form.controls.password.controls.password as password">
+        <div class="input-error" *ngIf="password.dirty && password.hasError('required')">This field is required</div>
+        <div *ngIf="password.dirty && password.hasError('minlength')" class="input-error">
+          The password must be at least <strong>{{ password.getError("minlength").requiredLength }}</strong>
+        </div>
+      </ng-container>
+    </div>
+    <div class="form-field">
+      <label for="confirm-password">Confirm Password</label>
+      <input
+        formControlName="confirmPassword"
+        type="password"
+        id="confirm-password"
+        placeholder="Enter confirm password..."
+      />
+      <ng-container *ngIf="form.controls.password.controls.confirmPassword as confirmPassword">
+        <div class="input-error" *ngIf="confirmPassword.hasError('passwordShouldMatch') && confirmPassword.dirty">
+          Password doesn't match
+        </div>
+      </ng-container>
+    </div>
   </fieldset>
   <button [disabled]="form.invalid">Save</button>
 </form>
