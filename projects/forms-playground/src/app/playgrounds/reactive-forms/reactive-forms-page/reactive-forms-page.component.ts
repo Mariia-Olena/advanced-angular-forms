@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, tap } from 'rxjs';
+import { Observable, startWith, Subscription, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
 import { banWords } from '../validators/ban-words.validator';
 import { password } from '../validators/password.validator';
@@ -14,7 +14,7 @@ import { password } from '../validators/password.validator';
   styleUrls: ['../../common-page.scss', '../../common-form.scss', './reactive-forms-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ReactiveFormsPageComponent implements OnInit {
+export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
   skills$!: Observable<string[]>;
   phoneLabels = ['Main', 'Mobile', 'Work', 'Home'];
   get years() {
@@ -43,16 +43,34 @@ export class ReactiveFormsPageComponent implements OnInit {
       }),
     ]),
     skills: this.fb.record<boolean>({}),
-    password: this.fb.nonNullable.group({
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: '',
-    }, { validators: password })
+    password: this.fb.nonNullable.group(
+      {
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: '',
+      },
+      { validators: password }
+    ),
   });
+
+  private ageValidators!: Subscription;
 
   constructor(private fb: FormBuilder, private userSkills: UserSkillsService) {}
 
   ngOnInit(): void {
     this.skills$ = this.userSkills.getSkills().pipe(tap((skills) => this.buildSkillControls(skills)));
+    this.ageValidators = this.form.controls.yearOfBirth.valueChanges
+      .pipe(
+        tap(() => this.form.controls.passport.markAsDirty()),
+        startWith(this.form.controls.yearOfBirth.value)
+      )
+      .subscribe((yearOfBirth) => {
+        if (this.isAdult(yearOfBirth)) {
+          this.form.controls.passport.addValidators(Validators.required);
+        } else {
+          this.form.controls.passport.removeValidators(Validators.required);
+        }
+        this.form.controls.passport.updateValueAndValidity();
+      });
   }
 
   addPhone(): void {
@@ -75,7 +93,16 @@ export class ReactiveFormsPageComponent implements OnInit {
     });
   }
 
+  private isAdult(yearOfBirth: number): boolean {
+    const currentYear = new Date().getFullYear();
+    return currentYear - yearOfBirth >= 18;
+  }
+
   OnSubmit(event: Event): void {
     console.log(this.form.value);
+  }
+
+  ngOnDestroy(): void {
+    this.ageValidators.unsubscribe();
   }
 }

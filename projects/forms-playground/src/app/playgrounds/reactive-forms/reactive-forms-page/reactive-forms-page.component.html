@@ -55,9 +55,10 @@
       <label for="passport">Passport Number</label>
       <input formControlName="passport" type="text" id="passport" placeholder="Provide Passport Data" />
       <ng-container *ngIf="form.controls.passport as passport">
-        <div class="input-error" *ngIf="passport.dirty && passport.hasError('pattern')">
-          Allowed format is: AB123456
-        </div>
+        <div class="input-error" *ngIf="passport.dirty && passport.hasError('required')">This field is required</div>
+      </ng-container>
+      <ng-container *ngIf="form.controls.passport as passport">
+        <div class="input-error" *ngIf="passport.dirty && passport.hasError('pattern')">Allowed format is: AB123456</div>
       </ng-container>
     </div>
   </div>
