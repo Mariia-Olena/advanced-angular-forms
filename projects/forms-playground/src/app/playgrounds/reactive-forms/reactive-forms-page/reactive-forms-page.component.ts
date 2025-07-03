@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, startWith, Subscription, tap } from 'rxjs';
+import { buffer, bufferCount, filter, Observable, startWith, Subscription, tap } from 'rxjs';
 import { UserSkillsService } from '../../../core/user-skills.service';
 import { banWords } from '../validators/ban-words.validator';
 import { password } from '../validators/password.validator';
+import { UniqueNicknameValidator } from '../validators/unique-nickname.validator';
 
 @Component({
   selector: 'app-reactive-forms-page',
@@ -27,7 +28,14 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
   form = this.fb.group({
     firstName: ['Mariia-Olena', [Validators.required, Validators.minLength(2), banWords(['test', 'admin', 'user'])]],
     lastName: ['Stus', [Validators.required, Validators.minLength(2)]],
-    nickname: ['', [Validators.required, Validators.minLength(2), Validators.pattern(/^[\w.]+$/)]],
+    nickname: [
+      '',
+      {
+        validators: [Validators.required, Validators.minLength(2), Validators.pattern(/^[\w.]+$/)],
+        asyncValidators: [this.uniqueNickname.validate.bind(this.uniqueNickname)],
+        updateOn: 'blur',
+      },
+    ],
     email: ['mariia.stus@gmail.com', [Validators.required, Validators.email]],
     yearOfBirth: this.fb.nonNullable.control(this.years[this.years.length - 1], [Validators.required]),
     passport: ['', [Validators.pattern(/^[A-Z]{2}[0-9]{6}$/)]],
@@ -53,8 +61,14 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
   });
 
   private ageValidators!: Subscription;
+  private formPendingState!: Subscription;
 
-  constructor(private fb: FormBuilder, private userSkills: UserSkillsService) {}
+  constructor(
+    private fb: FormBuilder,
+    private userSkills: UserSkillsService,
+    private uniqueNickname: UniqueNicknameValidator,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.skills$ = this.userSkills.getSkills().pipe(tap((skills) => this.buildSkillControls(skills)));
@@ -71,6 +85,12 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
         }
         this.form.controls.passport.updateValueAndValidity();
       });
+    this.formPendingState = this.form.statusChanges
+      .pipe(
+        bufferCount(2, 1),
+        filter(([prevState]) => prevState === 'PENDING')
+      )
+      .subscribe(() => this.cdr.markForCheck());
   }
 
   addPhone(): void {
@@ -100,9 +120,11 @@ export class ReactiveFormsPageComponent implements OnInit, OnDestroy {
 
   OnSubmit(event: Event): void {
     console.log(this.form.value);
+    this.form.reset();
   }
 
   ngOnDestroy(): void {
     this.ageValidators.unsubscribe();
+    this.formPendingState.unsubscribe();
   }
 }

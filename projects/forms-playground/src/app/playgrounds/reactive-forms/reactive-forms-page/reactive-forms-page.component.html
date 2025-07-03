@@ -1,5 +1,4 @@
 <form [formGroup]="form" (ngSubmit)="OnSubmit($event)" class="form">
-  <pre>{{ form.value | json }}</pre>
   <div class="form-field">
     <label for="name">First Name</label>
     <input formControlName="firstName" type="text" id="name" placeholder="Enter your name" />
@@ -34,6 +33,10 @@
       <div class="input-error" *ngIf="nickname.dirty && nickname.hasError('pattern')">
         Only letters, numbers, _ and . is allowed
       </div>
+      <div class="input-error" *ngIf="nickname.dirty && nickname.hasError('uniqueNickname')">
+        This nickname is already taken 
+      </div>
+      <div class="input-info" *ngIf="nickname.pending">Checking nickname...</div>
     </ng-container>
   </div>
   <div class="form-field">
@@ -142,7 +145,7 @@
       </ng-container>
     </div>
   </fieldset>
-  <button [disabled]="form.invalid">Save</button>
+  <button [disabled]="form.invalid || form.pending">Save</button>
 </form>
 
 <ng-template #loading>
