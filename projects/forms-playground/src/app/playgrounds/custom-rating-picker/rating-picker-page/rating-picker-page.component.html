@@ -1,5 +1,6 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="review">
   <h3>Course Review</h3>
+  <cfc-rating-picker formControlName="reviewRating"></cfc-rating-picker>
   <div contenteditable formControlName="reviewText" class="review-textarea"></div>
   <button>Save</button>
 </form>
