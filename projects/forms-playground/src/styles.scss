@@ -1,4 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+@import "@angular/cdk/overlay-prebuilt.css";
+
 :root {
   --color-primary: #004859;
   --color-accent: #ff8888;
@@ -83,8 +85,8 @@ button {
   }
 }
 
-input {
-  border: var(--color-text) solid 1px;
+input, select {
+  border: var(--color-text) solid 2px;
 }
 
 legend {
@@ -126,22 +128,44 @@ button[disabled] {
   }
 }
 
-.input-error {
-  color: var(--color-error);
+@mixin input-message() {
   font-size: 12px;
   box-sizing: border-box;
   padding: 2px 13px;
-
   animation-name: input-message-animation;
   animation-duration: 300ms;
 }
 
-.input-info {
-  color: var(--color-info);
-  font-size: 12px;
-  box-sizing: border-box;
-  padding: 2px 13px;
+.input-error {
+  @include input-message();
+  color: var(--color-error);
+}
 
-  animation-name: input-message-animation;
-  animation-duration: 300ms;
+.input-info {
+  @include input-message();
+  color: var(--color-info);
+}
+
+.review-textarea {
+  border-radius: var(--border-radius);
+  background-color: white;
+  padding: calc(var(--spacing-step) * 2);
+  margin-top: var(--spacing-step);
+  min-height: 74px;
+  box-sizing: border-box;
+
+  h4 {
+    margin-bottom: var(--spacing-step);
+    &:empty:before {
+      content: attr(data-placeholder);
+      opacity: 0.6;
+    }
+  }
+  
+  p, div {
+    &:empty:before {
+      content: attr(data-placeholder);
+      opacity: 0.6;
+    }
+  }
 }

@@ -1,1 +1,5 @@
-<p>Something awersome is going to be here 😉</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="review">
+  <h3>Course Review</h3>
+  <div contenteditable formControlName="reviewText" class="review-textarea"></div>
+  <button>Save</button>
+</form>
