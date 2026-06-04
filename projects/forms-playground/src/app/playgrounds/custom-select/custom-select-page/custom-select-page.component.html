@@ -1,1 +1,6 @@
-<p>Something awersome is going to be here 😉</p>
+<cfc-select value="niels" label="Pick the User" (selectedChanged)="onSelectionChanged($event)">
+  <cfc-option value="albert">Albert Einstein</cfc-option>
+  <cfc-option value="niels">Niels Bohr</cfc-option>
+  <cfc-option value="marie">Marie Curie</cfc-option>
+  <cfc-option value="isaac" [disabled]="true" disabledReason="Too smart">Isaac Newton</cfc-option>
+</cfc-select>
