@@ -1,18 +1,24 @@
 import {
   AfterContentInit,
+  ChangeDetectionStrategy,
   Component,
   ContentChildren,
   EventEmitter,
   HostListener,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
   QueryList,
+  SimpleChanges,
 } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { animate, state, style, transition, trigger, AnimationEvent } from '@angular/animations';
+import { merge, startWith, Subject, switchMap, takeUntil, tap } from 'rxjs';
+
 import { OptionComponent } from './option/option.component';
-import { merge, startWith, Subject, switchMap, takeUntil } from 'rxjs';
+
+export type SelectValue<T> = T | null;
 
 @Component({
   selector: 'cfc-select',
@@ -26,24 +32,31 @@ import { merge, startWith, Subject, switchMap, takeUntil } from 'rxjs';
       transition(':leave', [animate('420ms cubic-bezier(0.88,-0.7, 0.86, 0.85)')]),
     ]),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SelectComponent implements AfterContentInit, OnDestroy {
+export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestroy {
   @Input()
   label = '';
 
   @Input()
-  set value(value: string | null) {
+  displayWith: ((value: T) => string | number) | null = null;
+
+  @Input()
+  compareWith: (v1: T | null, v2: T | null) => boolean = (v1, v2) => v1 === v2;
+
+  @Input()
+  set value(value: SelectValue<T>) {
     this.selectionModel.clear();
     if (value) this.selectionModel.select(value);
   }
   get value() {
     return this.selectionModel.selected[0] || null;
   }
-  private selectionModel = new SelectionModel<string>();
+  private selectionModel = new SelectionModel<T>();
 
   @Output() readonly opened = new EventEmitter<void>();
   @Output() readonly closed = new EventEmitter<void>();
-  @Output() readonly selectedChanged = new EventEmitter<string | null>();
+  @Output() readonly selectedChanged = new EventEmitter<SelectValue<T>>();
 
   @HostListener('click')
   open() {
@@ -54,22 +67,39 @@ export class SelectComponent implements AfterContentInit, OnDestroy {
   }
 
   @ContentChildren(OptionComponent, { descendants: true })
-  options!: QueryList<OptionComponent>;
+  options!: QueryList<OptionComponent<T>>;
 
   isOpen = false;
 
+  protected get displayValue() {
+    if (this.displayWith && this.value) {
+      return this.displayWith(this.value);
+    }
+    return this.value;
+  }
+
+  private optionMap = new Map<T | null, OptionComponent<T>>();
   private unsubscribe$ = new Subject<void>();
 
   constructor() {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['compareWith']) {
+      this.selectionModel.compareWith = changes['compareWith'].currentValue;
+      this.highlightSelectedOption();
+    }
+  }
+
   ngAfterContentInit(): void {
-    this.highlightSelectedOption(this.value);
-    this.selectionModel.changed
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((values) => values.removed.forEach((rv) => this.findOptionByValue(rv)?.deselect()));
+    this.selectionModel.changed.pipe(takeUntil(this.unsubscribe$)).subscribe((values) => {
+      values.removed.forEach((rv) => this.optionMap.get(rv)?.deselect());
+      values.added.forEach((av) => this.optionMap.get(av)?.highlightAsSelected());
+    });
     this.options.changes
       .pipe(
-        startWith<QueryList<OptionComponent>>(this.options),
+        startWith<QueryList<OptionComponent<T>>>(this.options),
+        tap(() => this.refreshOption()),
+        tap(() => this.highlightSelectedOption()),
         switchMap((options) => merge(...options.map((o) => o.selected))),
         takeUntil(this.unsubscribe$),
       )
@@ -81,7 +111,7 @@ export class SelectComponent implements AfterContentInit, OnDestroy {
     if (fromState === null && toState === 'void' && !this.isOpen) this.closed.emit();
   }
 
-  private handleSelection(option: OptionComponent) {
+  private handleSelection(option: OptionComponent<T>) {
     if (option.value) {
       this.selectionModel.toggle(option.value);
       this.selectedChanged.emit(this.value);
@@ -89,12 +119,25 @@ export class SelectComponent implements AfterContentInit, OnDestroy {
     this.close();
   }
 
-  private highlightSelectedOption(value: string | null) {
-    this.findOptionByValue(value)?.highlightAsSelected();
+  private refreshOption() {
+    this.optionMap.clear();
+    this.options.forEach((o) => this.optionMap.set(o.value, o));
   }
 
-  private findOptionByValue(value: string | null) {
-    return this.options && this.options.find((o) => o.value === value);
+  private highlightSelectedOption() {
+    const valuesWithUpdatedReferences = this.selectionModel.selected.map((value) => {
+      const correspondingOption = this.findOptionByValue(value);
+      return correspondingOption ? correspondingOption.value! : value;
+    });
+    this.selectionModel.clear();
+    this.selectionModel.select(...valuesWithUpdatedReferences);
+  }
+
+  private findOptionByValue(value: SelectValue<T>) {
+    if (this.optionMap.has(value)) {
+      return this.optionMap.get(value);
+    }
+    return this.options && this.options.find((o) => this.compareWith(o.value, value));
   }
 
   ngOnDestroy(): void {

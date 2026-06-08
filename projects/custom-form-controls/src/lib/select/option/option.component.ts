@@ -1,13 +1,26 @@
-import { Component, EventEmitter, HostBinding, HostListener, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
+
+import { SelectValue } from '../select.component';
 
 @Component({
   selector: 'cfc-option',
   templateUrl: './option.component.html',
   styleUrls: ['./option.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OptionComponent implements OnInit {
+export class OptionComponent<T> implements OnInit {
   @Input()
-  value: string | null = null;
+  value: SelectValue<T> = null;
 
   @Input()
   disabledReason = '';
@@ -17,7 +30,7 @@ export class OptionComponent implements OnInit {
   disabled = false;
 
   @Output()
-  selected = new EventEmitter<OptionComponent>();
+  selected = new EventEmitter<OptionComponent<T>>();
 
   @HostListener('click')
   protected select() {
@@ -30,15 +43,17 @@ export class OptionComponent implements OnInit {
   @HostBinding('class.selected')
   protected isSelected = false;
 
-  constructor() {}
+  constructor(private cd: ChangeDetectorRef) {}
 
   ngOnInit(): void {}
 
   highlightAsSelected() {
     this.isSelected = true;
+    this.cd.markForCheck();
   }
 
   deselect() {
     this.isSelected = false;
+    this.cd.markForCheck();
   }
 }
