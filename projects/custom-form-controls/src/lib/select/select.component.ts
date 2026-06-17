@@ -2,6 +2,7 @@ import {
   AfterContentInit,
   Attribute,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ContentChildren,
   ElementRef,
@@ -22,6 +23,7 @@ import { merge, startWith, Subject, switchMap, takeUntil, tap } from 'rxjs';
 
 import { OptionComponent } from './option/option.component';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export type SelectValue<T> = T | T[] | null;
 
@@ -37,14 +39,19 @@ export type SelectValue<T> = T | T[] | null;
       transition(':leave', [animate('420ms cubic-bezier(0.88,-0.7, 0.86, 0.85)')]),
     ]),
   ],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: SelectComponent,
+      multi: true,
+    },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestroy {
-  @Input()
-  label = '';
-
-  @Input()
-  searchable = false;
+export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestroy, ControlValueAccessor {
+  @Input() label = '';
+  @Input() searchable = false;
+  @Input() @HostBinding('class.disabled') disabled = false;
 
   @Input()
   displayWith: ((value: T) => string | number) | null = null;
@@ -54,11 +61,11 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
 
   @Input()
   set value(value: SelectValue<T>) {
-    this.selectionModel.clear();
-    if (value) {
-      Array.isArray(value) ? this.selectionModel.select(...value) : this.selectionModel.select(value);
-    }
+    this.setupValue(value);
+    this.onChange(this.value);
+    this.highlightSelectedOption();
   }
+
   get value() {
     if (this.selectionModel.isEmpty()) {
       return null;
@@ -75,25 +82,42 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
   @Output() readonly selectedChanged = new EventEmitter<SelectValue<T>>();
   @Output() readonly searchChanged = new EventEmitter<string>();
 
+  @HostListener('blur')
+  markAsTouched() {
+    if (!this.disabled && !this.isOpen) {
+      this.onTouched();
+      this.cdr.markForCheck();
+    }
+  }
+
   @HostListener('click')
   open() {
+    if (this.disabled) return;
+
     this.isOpen = true;
     if (this.searchable) {
       requestAnimationFrame(() => this.searchInputEl.nativeElement.focus());
     }
+    this.cdr.markForCheck();
   }
   close() {
     this.isOpen = false;
+    this.onTouched();
+    this.cdr.markForCheck();
   }
+
+  @ContentChildren(OptionComponent, { descendants: true })
+  options!: QueryList<OptionComponent<T>>;
 
   @ViewChild('input')
   searchInputEl!: ElementRef<HTMLInputElement>;
 
   @HostBinding('class.select-panel-open')
-  @ContentChildren(OptionComponent, { descendants: true })
-  options!: QueryList<OptionComponent<T>>;
-
   isOpen = false;
+
+  @HostBinding('attr.tabIndex')
+  @Input()
+  tabIndex = 0;
 
   protected get displayValue() {
     if (this.displayWith && this.value) {
@@ -104,11 +128,32 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
     }
     return this.value;
   }
+  protected onChange: (newValue: SelectValue<T>) => void = () => {};
+  protected onTouched: () => void = () => {};
 
   private optionMap = new Map<SelectValue<T>, OptionComponent<T>>();
   private unsubscribe$ = new Subject<void>();
 
-  constructor(@Attribute('multiple') private multiple: string) {}
+  constructor(
+    @Attribute('multiple') private multiple: string,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  writeValue(value: SelectValue<T>): void {
+    this.setupValue(value);
+    this.highlightSelectedOption();
+    this.cdr.markForCheck();
+  }
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+  setDisabledState?(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+    this.cdr.markForCheck();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['compareWith']) {
@@ -142,16 +187,29 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
     this.searchChanged.emit((event.target as HTMLInputElement).value);
   }
 
-  clearSelection(event: Event) {
-    event.stopPropagation();
+  clearSelection(event?: Event) {
+    event?.stopPropagation();
+    if (this.disabled) return;
     this.selectionModel.clear();
     this.selectedChanged.emit(this.value);
+    this.onChange(this.value);
+    this.cdr.markForCheck();
+  }
+
+  private setupValue(value: SelectValue<T>) {
+    this.selectionModel.clear();
+    if (value) {
+      Array.isArray(value) ? this.selectionModel.select(...value) : this.selectionModel.select(value);
+    }
   }
 
   private handleSelection(option: OptionComponent<T>) {
+    if (this.disabled) return;
+
     if (option.value && !Array.isArray(option.value)) {
       this.selectionModel.toggle(option.value);
       this.selectedChanged.emit(this.value);
+      this.onChange(this.value);
     }
 
     if (!this.selectionModel.isMultipleSelection()) {

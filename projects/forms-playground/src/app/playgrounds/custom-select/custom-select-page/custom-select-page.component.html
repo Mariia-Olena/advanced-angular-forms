@@ -2,11 +2,10 @@
   label="Pick the User"
   multiple
   [searchable]="true"
-  [value]="selectValue"
+  [formControl]="selectValue"
   [displayWith]="displayWithFn"
   [compareWith]="compareWithFn"
   (closed)="onSearchChanged('')"
-  (selectedChanged)="onSelectionChanged($event)"
   (searchChanged)="onSearchChanged($event)"
 >
   <cfc-option *ngFor="let user of filteredUsers" [value]="user">{{ user.name }}</cfc-option>

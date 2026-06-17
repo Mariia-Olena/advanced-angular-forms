@@ -1,19 +1,20 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-import { SelectModule } from 'projects/custom-form-controls/src/public-api';
+import { SelectModule, SelectValue } from 'projects/custom-form-controls/src/public-api';
 import { User } from '../../../core/users';
 
 @Component({
   selector: 'app-custom-select-page',
   standalone: true,
-  imports: [CommonModule, SelectModule],
+  imports: [CommonModule, SelectModule, ReactiveFormsModule],
   templateUrl: './custom-select-page.component.html',
   styleUrls: ['../../common-page.scss', './custom-select-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CustomSelectPageComponent {
-  selectValue = new User(3, 'Marie Curie', 'marie', 'Poland/French');
+export class CustomSelectPageComponent implements OnInit {
+  selectValue: FormControl<SelectValue<User>> = new FormControl([new User(3, 'Marie Curie', 'marie', 'Poland/French')]);
   users: User[] = [
     new User(1, 'Albert Einstein', 'albert', 'Germany/USA'),
     new User(2, 'Niels Bohr', 'niels', 'Denmark'),
@@ -27,6 +28,10 @@ export class CustomSelectPageComponent {
     new User(10, 'Ernest Rutherford', 'ernest', 'New Zealand'),
   ];
   filteredUsers = this.users;
+
+  ngOnInit(): void {
+    this.selectValue.valueChanges.subscribe(this.onSelectionChanged);
+  }
 
   displayWithFn(user: User) {
     return user.name;
