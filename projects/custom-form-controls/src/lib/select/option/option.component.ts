@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
@@ -9,6 +10,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { Highlightable } from '@angular/cdk/a11y';
 
 import { SelectValue } from '../select.component';
 
@@ -18,7 +20,7 @@ import { SelectValue } from '../select.component';
   styleUrls: ['./option.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OptionComponent<T> implements OnInit {
+export class OptionComponent<T> implements OnInit, Highlightable {
   @Input()
   value: SelectValue<T> = null;
 
@@ -43,7 +45,23 @@ export class OptionComponent<T> implements OnInit {
   @HostBinding('class.selected')
   protected isSelected = false;
 
-  constructor(private cd: ChangeDetectorRef) {}
+  @HostBinding('class.active')
+  protected isActive = false;
+
+  constructor(
+    private cd: ChangeDetectorRef,
+    private el: ElementRef<HTMLElement>,
+  ) {}
+
+  setActiveStyles(): void {
+    this.isActive = true;
+    this.cd.markForCheck();
+  }
+
+  setInactiveStyles(): void {
+    this.isActive = false;
+    this.cd.markForCheck();
+  }
 
   ngOnInit(): void {}
 
@@ -55,5 +73,14 @@ export class OptionComponent<T> implements OnInit {
   deselect() {
     this.isSelected = false;
     this.cd.markForCheck();
+  }
+
+  scrollIntoView(options?: ScrollIntoViewOptions) {
+    this.el.nativeElement.scrollIntoView(
+      options || {
+        behavior: 'smooth',
+        block: 'center',
+      },
+    );
   }
 }

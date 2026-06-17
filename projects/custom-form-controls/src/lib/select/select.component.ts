@@ -17,13 +17,14 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { SelectionModel } from '@angular/cdk/collections';
 import { animate, state, style, transition, trigger, AnimationEvent } from '@angular/animations';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { SelectionModel } from '@angular/cdk/collections';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
+import { ActiveDescendantKeyManager } from '@angular/cdk/a11y';
 import { merge, startWith, Subject, switchMap, takeUntil, tap } from 'rxjs';
 
 import { OptionComponent } from './option/option.component';
-import { coerceBooleanProperty } from '@angular/cdk/coercion';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export type SelectValue<T> = T | T[] | null;
 
@@ -103,7 +104,19 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
   close() {
     this.isOpen = false;
     this.onTouched();
+    this.hostEl.nativeElement.focus();
     this.cdr.markForCheck();
+  }
+
+  @HostListener('keydown', ['$event'])
+  protected onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown' && !this.isOpen) {
+      this.open();
+    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && this.isOpen) {
+      this.listKeyManager.onKeydown(event);
+    } else if (event.key === 'Enter' && this.isOpen && this.listKeyManager.activeItem) {
+      this.handleSelection(this.listKeyManager.activeItem);
+    }
   }
 
   @ContentChildren(OptionComponent, { descendants: true })
@@ -133,10 +146,12 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
 
   private optionMap = new Map<SelectValue<T>, OptionComponent<T>>();
   private unsubscribe$ = new Subject<void>();
+  private listKeyManager!: ActiveDescendantKeyManager<OptionComponent<T>>;
 
   constructor(
     @Attribute('multiple') private multiple: string,
     private cdr: ChangeDetectorRef,
+    private hostEl: ElementRef,
   ) {}
 
   writeValue(value: SelectValue<T>): void {
@@ -163,6 +178,10 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
   }
 
   ngAfterContentInit(): void {
+    this.listKeyManager = new ActiveDescendantKeyManager(this.options).withWrap();
+    this.listKeyManager.change.pipe(takeUntil(this.unsubscribe$)).subscribe((itemIndex) => {
+      this.options.get(itemIndex)?.scrollIntoView();
+    });
     this.selectionModel.changed.pipe(takeUntil(this.unsubscribe$)).subscribe((values) => {
       values.removed.forEach((rv) => this.optionMap.get(rv)?.deselect());
       values.added.forEach((av) => this.optionMap.get(av)?.highlightAsSelected());
