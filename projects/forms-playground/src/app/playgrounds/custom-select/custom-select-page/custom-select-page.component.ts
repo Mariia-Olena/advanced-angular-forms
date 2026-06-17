@@ -26,6 +26,7 @@ export class CustomSelectPageComponent {
     new User(9, 'Richard Feynman', 'richard', 'USA'),
     new User(10, 'Ernest Rutherford', 'ernest', 'New Zealand'),
   ];
+  filteredUsers = this.users;
 
   displayWithFn(user: User) {
     return user.name;
@@ -37,5 +38,11 @@ export class CustomSelectPageComponent {
 
   onSelectionChanged(value: unknown) {
     console.log('Selected value:', value);
+  }
+
+  onSearchChanged(queryString: string) {
+    this.filteredUsers = this.users.filter((user) =>
+      user.name.toLocaleLowerCase().startsWith(queryString.toLocaleLowerCase()),
+    );
   }
 }

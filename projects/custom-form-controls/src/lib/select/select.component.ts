@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ContentChildren,
+  ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
@@ -13,6 +14,7 @@ import {
   Output,
   QueryList,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { animate, state, style, transition, trigger, AnimationEvent } from '@angular/animations';
@@ -42,6 +44,9 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
   label = '';
 
   @Input()
+  searchable = false;
+
+  @Input()
   displayWith: ((value: T) => string | number) | null = null;
 
   @Input()
@@ -68,14 +73,21 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
   @Output() readonly opened = new EventEmitter<void>();
   @Output() readonly closed = new EventEmitter<void>();
   @Output() readonly selectedChanged = new EventEmitter<SelectValue<T>>();
+  @Output() readonly searchChanged = new EventEmitter<string>();
 
   @HostListener('click')
   open() {
     this.isOpen = true;
+    if (this.searchable) {
+      requestAnimationFrame(() => this.searchInputEl.nativeElement.focus());
+    }
   }
   close() {
     this.isOpen = false;
   }
+
+  @ViewChild('input')
+  searchInputEl!: ElementRef<HTMLInputElement>;
 
   @HostBinding('class.select-panel-open')
   @ContentChildren(OptionComponent, { descendants: true })
@@ -121,9 +133,13 @@ export class SelectComponent<T> implements OnChanges, AfterContentInit, OnDestro
       .subscribe((selectedOption) => this.handleSelection(selectedOption));
   }
 
-  onPanelAnimationDone({ fromState, toState }: AnimationEvent): void {
+  protected onPanelAnimationDone({ fromState, toState }: AnimationEvent): void {
     if (fromState === 'void' && toState === null && this.isOpen) this.opened.emit();
     if (fromState === null && toState === 'void' && !this.isOpen) this.closed.emit();
+  }
+
+  protected onHandleInput(event: Event) {
+    this.searchChanged.emit((event.target as HTMLInputElement).value);
   }
 
   clearSelection(event: Event) {
